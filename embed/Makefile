@@ -6,7 +6,7 @@ CFLAGS = -lglfw3 -lX11 -lGL -lpthread -lXrandr -lXi -ldl
 CFLAGSI = -ljson-c
 CC = g++
 
-main-program: ${OBJ}
+app: ${OBJ}
 	${CC} ${OBJS} -o $@ ${CFLAGS} ${CFLAGSI}
 clean:
-	-rm main-program Beaglebone
+	-rm app

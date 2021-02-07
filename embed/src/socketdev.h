@@ -43,6 +43,7 @@ class socket_programming{
         void print_addr(void);
         void create(void);
         void make_connection(void);
+        void wait_for_connection(void);
         char * run(void);
         void cleanup(void);
 };

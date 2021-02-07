@@ -17,16 +17,15 @@ int main(int argc, char* argv[]){
 
         /* initiate the communication with the simulation */
         socket.init_socket();
-        /* initiate the window */
-        scene.init_glfw();
         /* socket connections */
         socket.print_addr();
         socket.create();
-        socket.make_connection();
+        socket.wait_for_connection();
         /* read the defined shaders into a char array */
         char vs_direction[] = "src/shader/basic.vert";
         char fs_direction[] = "src/shader/basic.frag";
-
+        /* initiate the window */
+        scene.init_glfw();
         /* link the shaders to our program */
         int main_flag = scene.link_shader(vs_direction, fs_direction);
 

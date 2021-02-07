@@ -54,6 +54,16 @@ void socket_programming::make_connection(void){
     freeaddrinfo(peer_address);
     std::cout << "Connected.\n" << std::endl;
 }
+/* Waiting for established connection */
+void socket_programming::wait_for_connection(void){
+    while(connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen)){
+        std::cout << "Connecting.. \n" <<std::endl;
+        fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
+        sleep(5);
+    }
+    freeaddrinfo(peer_address);
+    std::cout << "Connected.\n" << std::endl;
+}
 /*
 Our programming should now loop indefinetily to check for new data coming in
 */
