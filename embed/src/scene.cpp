@@ -89,6 +89,7 @@ void Scene::init_glfw(void)
     gladLoadGL();
     glfwSwapInterval(1);
 }
+/*
 
 /* render the data recieved from the socket */
 int Scene::draw(char *socket_data)

@@ -59,7 +59,7 @@ void socket_programming::wait_for_connection(void){
     while(connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen)){
         std::cout << "Connecting.. \n" <<std::endl;
         fprintf(stderr, "connect() failed. (%d)\n", GETSOCKETERRNO());
-        sleep(5);
+        sleep(1);
     }
     freeaddrinfo(peer_address);
     std::cout << "Connected.\n" << std::endl;

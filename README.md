@@ -60,6 +60,36 @@ You can start rendering and connect to the simulation by passing the same ip-add
 ```
 ./main-program 127.0.0.1 8080
 ```
+## Install as SystemD service
+systemd is a linux service that connects all the processes of the operating system. You can install you own programs as systemd service as to run it all the time when the computer is on.
+In the app.service file change the user accordingly. Then copy the service file to your systemd processes.
+```
+sudo cp app.service /etc/systemd/system/
+``` 
+There are some environment variable that you need to pass to the operating system.
+```
+sudo cp app.conf /etc/systemd/
+```
+Now copy the executable to your local binary folder.
+```
+sudo cp app /usr/bin/
+```
+Now you need to copy the GLSL shaders here as well. I personally like to keep them in my projects folder but easier is to install them in the same folder as your executable.
+```
+sudo cp -r shader /usr/bin/
+```
+
+Now restart the systemd services
+```
+sudo systemctl stop app.service
+sudo systemctl daemon-reload
+sudo systemctl start app.service
+```
+Be careful with systemd processes sockets and executables. They are very prone to hackers. If you are absolutely sure you can enable the systemd service on boot.
+```
+sudo systemctl enable app.service
+```
+
 ## Resources
 * Hands-on Network Programming with C: Learn Socket Programming in C
 

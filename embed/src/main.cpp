@@ -21,14 +21,23 @@ int main(int argc, char* argv[]){
         socket.print_addr();
         socket.create();
         socket.wait_for_connection();
-        /* read the defined shaders into a char array */
-        char vs_direction[] = "src/shader/basic.vert";
-        char fs_direction[] = "src/shader/basic.frag";
         /* initiate the window */
         scene.init_glfw();
-        /* link the shaders to our program */
-        int main_flag = scene.link_shader(vs_direction, fs_direction);
-
+        /* Check if ENV variables are available */
+        int main_flag = 1;
+        if(getenv("GLSL_APP_VERT")!=NULL && getenv("GLSL_APP_FRAG")!=NULL){
+            char* vs_direction = getenv("GLSL_APP_VERT");
+            char* fs_direction = getenv("GLSL_APP_FRAG");
+            /* link the shaders to our program */
+            main_flag = scene.link_shader(vs_direction, fs_direction);
+        }
+        else{
+            /* read the defined shaders into a char array */
+            char vs_direction[] = "src/shader/basic.vert";
+            char fs_direction[] = "src/shader/basic.frag";
+            /* link the shaders to our program */
+            main_flag = scene.link_shader(vs_direction, fs_direction);
+        }
         while(main_flag==0){
             /* get json data from socket */
             buffer_pointer = socket.run();
