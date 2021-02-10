@@ -50,7 +50,9 @@ sudo apt-get install libjson-dev-c
 ```
 Now you are ready to compile the program. For now this is a manually programmed makefile. This should later be a cmake program.
 ```
-make main-program
+mkdir build && cd build
+cmake ../
+make
 ```
 When not connected to a robot you can start the simulation. You have to pass the correct ip-address and port. For example the localhost: 127.0.0.1. You can also use the ip address of the beaglebone 192.168.7.1 8080
 ```
@@ -58,9 +60,9 @@ python3 main-sim.py 127.0.0.1 8080
 ```
 You can start rendering and connect to the simulation by passing the same ip-address and port. This should get you started.
 ```
-./main-program 127.0.0.1 8080
+./app 127.0.0.1 8080
 ```
-## Install as SystemD service
+## Install as Systemd service
 systemd is a linux service that connects all the processes of the operating system. You can install you own programs as systemd service as to run it all the time when the computer is on.
 In the app.service file change the user accordingly. Then copy the service file to your systemd processes.
 ```
