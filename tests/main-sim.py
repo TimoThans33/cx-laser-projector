@@ -7,6 +7,7 @@ from queue import Queue
 import threading
 import time
 import sys
+import math
 
 #HOST =  '127.0.0.1' # localhost
 #PORT = 8085
@@ -16,12 +17,12 @@ WIDTH = 0.2/2
 HEIGHT = 0.2
 # number of timesteps that are projects
 T = 100
+#Select drawfunction
+switch = 1        # 0 = line, 1 = arrow, 2 = circle
 
-def Arrowheadfun(Coordx, Coordy, Varray, arrowsize=10, arrowwidth=0.01):
+def Arrowheadfun(new_coordx, new_coordy, Varray, arrowsize=10, arrowwidth=0.01):
     arrowsize=-int(arrowsize)
-    index = int(arrowsize/20)
-    new_coordx=Coordx
-    new_coordy=Coordy
+
     #Create Arrowhead
     diffx=new_coordx[arrowsize]-new_coordx[-1]
     diffy=new_coordy[arrowsize]-new_coordy[-1]
@@ -155,10 +156,12 @@ class simulation(threading.Thread):
                 msg = self.q1.get()
                 self.new_coordx = np.transpose(self.rot_coord)[0]-np.transpose(self.rot_coord)[0][0]
                 self.new_coordy = np.transpose(self.rot_coord)[1]-np.transpose(self.rot_coord)[1][0]
-                self.Arrowheadx, self.Arrowheady, self.Varrow = Arrowheadfun(self.new_coordx, self.new_coordy, self.v_array, self.t/4, 0.03)
-                self.new_coordx = np.append(self.new_coordx, self.Arrowheadx)
-                self.new_coordy = np.append(self.new_coordy, self.Arrowheady)
-                self.v_array = np.append(self.v_array, self.Varrow)
+                if switch == 1:
+                    self.Arrowheadx, self.Arrowheady, self.Varrow = Arrowheadfun(self.new_coordx, self.new_coordy, self.v_array, self.t/4, 0.03)
+                    self.new_coordx = np.append(self.new_coordx, self.Arrowheadx)
+                    self.new_coordy = np.append(self.new_coordy, self.Arrowheady)
+                    self.v_array = np.append(self.v_array, self.Varrow)
+
                 data = [ self.new_coordx, self.new_coordy, np.transpose(self.v_array) ]
                 # print(data)
                 self.q2.put(data)
