@@ -17,6 +17,38 @@ HEIGHT = 0.2
 # number of timesteps that are projects
 T = 100
 
+def Arrowheadfun(Coordx, Coordy, Varray, arrowsize=10, arrowwidth=0.01):
+    arrowsize=-int(arrowsize)
+    index = int(arrowsize/20)
+    new_coordx=Coordx
+    new_coordy=Coordy
+    #Create Arrowhead
+    diffx=new_coordx[arrowsize]-new_coordx[-1]
+    diffy=new_coordy[arrowsize]-new_coordy[-1]
+    PerpendicularRC = -diffx/diffy
+    B = new_coordy[arrowsize]-PerpendicularRC*new_coordx[arrowsize]
+
+    Y0 = new_coordy[-1]
+    Y1 = new_coordy[arrowsize]-arrowwidth
+    Y2 = new_coordy[arrowsize]+arrowwidth
+    Y3 = new_coordy[-1]
+
+    X0 = new_coordx[-1]
+    X1 = (Y1-B)/PerpendicularRC
+    X2 = (Y2-B)/PerpendicularRC
+    X3 = new_coordx[-1]
+
+    V0 = Varray[-1]
+    V1 = Varray[arrowsize]
+    V2 = Varray[arrowsize]
+    V3 = Varray[-1]
+
+    Xarrow = [X0, X1, X2, X3]
+    Yarrow = [Y0, Y1, Y2, Y3]
+    Varrow = [V0, V1, V2, V3]
+
+    return Xarrow, Yarrow, Varrow
+
 class sockets(threading.Thread):
     def __init__(self, host, port, q1, q2):
         threading.Thread.__init__(self)
@@ -45,7 +77,7 @@ class sockets(threading.Thread):
                     self.data_x = self.data[0]
                     self.data_y = self.data[1]
                     self.data_v = self.data[2]
-                    
+
                     # json format
                     self.data_json = json.dumps({"x": self.data_x.tolist(), "y": self.data_y.tolist(), "v": self.data_v.tolist()})
                     # send json array
@@ -64,13 +96,13 @@ class rest(threading.Thread):
             # check if a request is send
             while not self.q1.empty():
                 msg = self.q1.get()
-                data = [ self.x, self.y, 1.0 ] 
+                data = [ self.x, self.y, 1.0 ]
                 print(data)
                 self.q2.put(data)
 
 
 class simulation(threading.Thread):
-    def __init__(self,  width, height, t, q1, q2):          
+    def __init__(self,  width, height, t, q1, q2):
         threading.Thread.__init__(self)
         self.data = pd.read_csv("trajectories/trajectory_1_fpg_out.txt", skiprows=11)
         self.width = width
@@ -93,8 +125,9 @@ class simulation(threading.Thread):
         print(self.data.shape)
         print(self.data.ndim)
         print(self.data)
+
     def run(self):
-        for i in range(len(self.x_robot)-1): 
+        for i in range(len(self.x_robot)-1):
             #print("Iteration: ", i)
             # read current angle and create the rotation matrix
             self.theta = self.angle[i]
@@ -120,7 +153,13 @@ class simulation(threading.Thread):
             # check if a request is send
             while not self.q1.empty():
                 msg = self.q1.get()
-                data = [ np.transpose(self.rot_coord)[0]-np.transpose(self.rot_coord)[0][0], np.transpose(self.rot_coord)[1]-np.transpose(self.rot_coord)[1][0], np.transpose(self.v_array) ] 
+                self.new_coordx = np.transpose(self.rot_coord)[0]-np.transpose(self.rot_coord)[0][0]
+                self.new_coordy = np.transpose(self.rot_coord)[1]-np.transpose(self.rot_coord)[1][0]
+                self.Arrowheadx, self.Arrowheady, self.Varrow = Arrowheadfun(self.new_coordx, self.new_coordy, self.v_array, self.t/4, 0.03)
+                self.new_coordx = np.append(self.new_coordx, self.Arrowheadx)
+                self.new_coordy = np.append(self.new_coordy, self.Arrowheady)
+                self.v_array = np.append(self.v_array, self.Varrow)
+                data = [ self.new_coordx, self.new_coordy, np.transpose(self.v_array) ]
                 # print(data)
                 self.q2.put(data)
                 #input("press any key")
@@ -136,7 +175,7 @@ if __name__ == "__main__":
     print("Argument List: ", str(sys.argv))
     HOST = sys.argv[1]
     PORT = int(sys.argv[2])
-    # initiate request (Q1) and message (Q2) queue 
+    # initiate request (Q1) and message (Q2) queue
     request_queue = Queue()
     msg_queue = Queue()
     # creating objects of classes
