@@ -63,6 +63,47 @@ int Scene::get_compile_data(GLuint shader)
     return 0;
 }
 
+void Scene::init_X11(void)
+{
+    // Open the display
+    display = XOpenDisplay(NULL);
+    if (display == NULL)
+    {
+        printf("%s\n", "Could not open display");
+        throw;
+    }
+    root = DefaultRootWindow(display);
+    /* We need: color depth and depth buffer */
+    GLint att[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
+    vi = glXChooseVisual(display, 0, att);
+
+    if (vi == NULL)
+    {
+        printf("\n\tno appropriate visual found\n\n");
+        exit(0);
+    }
+    else
+    {
+        printf("\n\visual %p selected\n", (void *)vi->visualid);
+    }
+    /* Create a Colormap for the window */
+    cmap = XCreateColormap(display, root, vi->visual, AllocNone);
+
+    /* A structure of type XSetWindowAttributes has to be initialized */
+    swa.colormap = cmap;
+    swa.event_mask = ExposureMask | KeyPressMask;
+    /* Create the window */
+    win = XCreateWindow(display, root, 0, 0, 600, 600, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
+    /* XCreateWindow returns a window id. Now we make the window appear */
+    XMapWindow(display, win);
+    XStoreName(display, win, "VERY SIMPLE APPLICATION");
+
+    /* Create a GL context and bind it to the window */
+    glc = glXCreateContext(display, vi, NULL, GL_TRUE);
+    glXMakeCurrent(display, win, glc);
+    /* Use depth-buffering */
+    glEnable(GL_DEPTH_TEST);
+}
 /* initiate GLFW */
 void Scene::init_glfw(void)
 {
@@ -89,8 +130,13 @@ void Scene::init_glfw(void)
     gladLoadGL();
     glfwSwapInterval(1);
 }
+/* render the data on a X11 window */
 /*
+int Scene::draw(char *socket_data)
+{
 
+}
+*/
 /* render the data recieved from the socket */
 int Scene::draw(char *socket_data)
 {
@@ -108,7 +154,7 @@ int Scene::draw(char *socket_data)
 
     mat4x4_identity(m);
     /* This will rotate the projection */
-    mat4x4_rotate_Y(m, m, 0.0);// mat4x4_rotate_Z(m, m, (float) glfwGetTime());
+    // mat4x4_rotate_Y(m, m, 0.0);// mat4x4_rotate_Z(m, m, (float) glfwGetTime());
     mat4x4_ortho(p, 0.f, 0.7, -.3f, .3f, 1.f, -1.f);
     // mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
     // mat4x4_scale(m, m, 6 );

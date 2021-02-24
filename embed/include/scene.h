@@ -7,6 +7,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <GL/glu.h>
+
 #include "linmath.h"
 
 #include <vector>
@@ -17,6 +24,7 @@
 #include <string.h>
 #include <fstream>
 #include <vector>
+
 class Scene
 {
     private:
@@ -40,9 +48,19 @@ class Scene
         struct json_object *v_id;
     public:
         GLuint program;
+        Display *display;
+        Window root;
+        Window win;
+        XEvent ev;
+        Colormap cmap;
+        XSetWindowAttributes swa;
+        GLXContext glc;
+        XWindowAttributes gwa;
+        XVisualInfo *vi;
         std::string read_shader(char direction[]);
         int get_compile_data(GLuint shader);
         int link_shader(char vs_direction[], char fs_direction[]);
+        void init_X11(void);
         void init_glfw(void);
         int draw(char *socket_data);
         void glfw_cleanup(void);

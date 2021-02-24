@@ -30,6 +30,8 @@ int main(int argc, char* argv[]){
             char* fs_direction = getenv("GLSL_APP_FRAG");
             /* link the shaders to our program */
             main_flag = scene.link_shader(vs_direction, fs_direction);
+            std::cout<<"src direction vertex shader : "<<vs_direction<<std::endl;
+            std::cout<<"src direction fragment shader : "<<fs_direction<<std::endl;
         }
         else{
             /* read the defined shaders into a char array */
@@ -37,6 +39,8 @@ int main(int argc, char* argv[]){
             char fs_direction[] = "src/shader/basic.frag";
             /* link the shaders to our program */
             main_flag = scene.link_shader(vs_direction, fs_direction);
+            std::cout<<"src direction vertex_shader : "<<vs_direction<<std::endl;
+            std::cout<<"src direction fragment shader : "<<fs_direction<<std::endl;
         }
         while(main_flag==0){
             /* get json data from socket */
