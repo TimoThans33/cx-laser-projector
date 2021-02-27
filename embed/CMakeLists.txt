@@ -18,6 +18,16 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 
+# GLFW
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOLL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(vendor/glfw)
+
+# include shaders
+file(COPY shaders DESTINATION .)
+
 # header files
 include_directories(include)
 
@@ -35,6 +45,7 @@ target_link_libraries(LibsModule -lXrandr)
 target_link_libraries(LibsModule -lXi)
 target_link_libraries(LibsModule -ldl)
 target_link_libraries(LibsModule -ljson-c)
+target_link_libraries(LibsModule glfw)
 
 # create executable
 add_executable(app ${SOURCES})
@@ -47,6 +58,7 @@ install(TARGETS app
     DESTINATION "/usr/bin/"
 )
 
+# create .deb package
 SET(CPACK_GENERATOR "DEB")
 SET(CPACK_DEBIAN_PACKAGE_MAINTAINER "kk")
 INCLUDE(CPack)

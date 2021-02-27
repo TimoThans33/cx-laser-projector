@@ -17,10 +17,6 @@ struct Velocity
 
 // #define DEBUG
 
-float x_values = 1.0;
-float y_values = 1.0;
-float v_values = 0.5;
-
 /* Function Prototypes */
 static void error_callback(int error, const char* description);
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -38,73 +34,6 @@ std::string Scene::read_shader(char direction[])
     return shader_text;
 }
 
-/* check for compile errors from the glsl compiler, pass 0 upon completion and 1 when error occured */
-int Scene::get_compile_data(GLuint shader)
-{
-    GLint isCompiled = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-    if(isCompiled == GL_FALSE)
-    {
-        /* ERROR handling */
-        GLint maxLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-        
-        std::vector<GLchar> errorLog(maxLength);
-        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
-        /* make sure we don't leak the shader */
-        glDeleteShader(shader);
-        for(int i=0; i<maxLength; i++){
-            std::cout<<errorLog[i];
-        }
-        /* return 1 on error */
-        return 1;
-    }
-    /* return 0 when succesfull */
-    return 0;
-}
-
-void Scene::init_X11(void)
-{
-    // Open the display
-    display = XOpenDisplay(NULL);
-    if (display == NULL)
-    {
-        printf("%s\n", "Could not open display");
-        throw;
-    }
-    root = DefaultRootWindow(display);
-    /* We need: color depth and depth buffer */
-    GLint att[] = {GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None};
-    vi = glXChooseVisual(display, 0, att);
-
-    if (vi == NULL)
-    {
-        printf("\n\tno appropriate visual found\n\n");
-        exit(0);
-    }
-    else
-    {
-        printf("\n\visual %p selected\n", (void *)vi->visualid);
-    }
-    /* Create a Colormap for the window */
-    cmap = XCreateColormap(display, root, vi->visual, AllocNone);
-
-    /* A structure of type XSetWindowAttributes has to be initialized */
-    swa.colormap = cmap;
-    swa.event_mask = ExposureMask | KeyPressMask;
-    /* Create the window */
-    win = XCreateWindow(display, root, 0, 0, 600, 600, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &swa);
-    /* XCreateWindow returns a window id. Now we make the window appear */
-    XMapWindow(display, win);
-    XStoreName(display, win, "VERY SIMPLE APPLICATION");
-
-    /* Create a GL context and bind it to the window */
-    glc = glXCreateContext(display, vi, NULL, GL_TRUE);
-    glXMakeCurrent(display, win, glc);
-    /* Use depth-buffering */
-    glEnable(GL_DEPTH_TEST);
-}
-/* initiate GLFW */
 void Scene::init_glfw(void)
 {
     glfwSetErrorCallback(error_callback);
@@ -130,13 +59,7 @@ void Scene::init_glfw(void)
     gladLoadGL();
     glfwSwapInterval(1);
 }
-/* render the data on a X11 window */
-/*
-int Scene::draw(char *socket_data)
-{
 
-}
-*/
 /* render the data recieved from the socket */
 int Scene::draw(char *socket_data)
 {
@@ -250,17 +173,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+
 /* link shader with VBO >> DEPRECIATED!*/
 int Scene::link_shader(char vs_direction[], char fs_direction[])
 {
     vertex_shader_text = read_shader(vs_direction);
     vs_text = vertex_shader_text.c_str();
     std::cout<<"using vertex shader : \n"<<vs_text<<std::endl;
-
     vertex_shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex_shader, 1, &vs_text, NULL);
     glCompileShader(vertex_shader);
-
     vertex_flag = get_compile_data(vertex_shader);
     if (vertex_flag==1){
         std::cout<<"Error when compiling"<<std::endl;
@@ -291,5 +213,30 @@ int Scene::link_shader(char vs_direction[], char fs_direction[])
     glAttachShader(program, fragment_shader);
     glLinkProgram(program);
 
+    return 0;
+}
+
+/* check for compile errors from the glsl compiler, pass 0 upon completion and 1 when error occured */
+int Scene::get_compile_data(GLuint shader)
+{
+    GLint isCompiled = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+    if(isCompiled == GL_FALSE)
+    {
+        /* ERROR handling */
+        GLint maxLength = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        std::vector<GLchar> errorLog(maxLength);
+        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+        /* make sure we don't leak the shader */
+        glDeleteShader(shader);
+        for(int i=0; i<maxLength; i++){
+            std::cout<<errorLog[i];
+        }
+        /* return 1 on error */
+        return 1;
+    }
+    /* return 0 when succesfull */
     return 0;
 }

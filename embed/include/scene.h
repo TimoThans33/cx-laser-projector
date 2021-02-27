@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "GLFW/glfw3.h"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -60,7 +60,6 @@ class Scene
         std::string read_shader(char direction[]);
         int get_compile_data(GLuint shader);
         int link_shader(char vs_direction[], char fs_direction[]);
-        void init_X11(void);
         void init_glfw(void);
         int draw(char *socket_data);
         void glfw_cleanup(void);

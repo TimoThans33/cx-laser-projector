@@ -38,6 +38,9 @@ class socket_programming{
             for (int i;i<x;i++){
                 argv[i] = y[i];
             }
+            init_socket();
+            print_addr();
+            create();
         }
         void init_socket(void);
         void print_addr(void);

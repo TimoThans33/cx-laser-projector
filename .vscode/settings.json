@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stdlib.h": "c",
-        "glu.h": "c"
+        "glu.h": "c",
+        "iostream": "cpp"
     }
 }
