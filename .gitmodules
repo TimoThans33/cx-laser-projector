@@ -1,3 +1,3 @@
-[submodule "embed/vendor"]
-	path = embed/vendor
+[submodule "code/vendor/glfw"]
+	path = code/vendor/glfw
 	url = https://github.com/glfw/glfw.git
