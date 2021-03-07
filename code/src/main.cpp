@@ -1,43 +1,48 @@
 #include "socketdev.h"
 #include "scene.h"
+#include "machy_utils.h"
+#include "envs.h"
 
 //#define DEBUG
 
-int main(int argc, char* argv[])
+std::vector<Variables*> *variables;
+
+void create_env(Environment *env){
+    env->appendVariable( new FragShader("GLSL_APP_VERT", "shaders/basic.vert"));
+    env->appendVariable( new VertexShader("GLSL_APP_FRAG", "shaders/basic.frag"));
+    env->appendVariable( new IPaddress("IP_ADDR", "127.0.0.1"));
+    env->appendVariable( new Portaddress("PORT_ADDR", "8000"));
+}
+
+int main()
 {
     char *buffer_pointer;
 
-    socket_programming socket(argc, argv);
-    Scene scene;
+    /* creating the environment */
+    Environment *env = new Environment ();
+    create_env(env);
+    env->print();
 
+    /*
+    Filemanagement filemanagement;
+    filemanagement.read_csv();
+    */
+   
+    /* opening the socket */
+    socket_programming socket(env->get(2), env->get(3));
     socket.wait_for_connection();
-    /* Check if ENV variables are available */
+
+    /* start openGL context */
+    Scene scene;
+    /* link to the shaders */
     int main_flag = 1;
-    if(getenv("GLSL_APP_VERT")!=NULL && getenv("GLSL_APP_FRAG")!=NULL){
-        char* vs_direction = getenv("GLSL_APP_VERT");
-        char* fs_direction = getenv("GLSL_APP_FRAG");
-        // link the shaders to ;our program 
-        std::cout<<"src direction vertex shader : "<<vs_direction<<std::endl;
-        std::cout<<"src direction fragment shader : "<<fs_direction<<std::endl;
-        main_flag = scene.link_shader(vs_direction, fs_direction);
-    }
-    else{
-        // read the defined shaders into a char array 
-        char vs_direction[] = "shaders/basic.vert";
-        char fs_direction[] = "shaders/basic.frag";
-        // link the shaders to our program
-        std::cout<<"src direction vertex_shader : "<<vs_direction<<std::endl;
-        std::cout<<"src direction fragment shader : "<<fs_direction<<std::endl;
-        main_flag = scene.link_shader(vs_direction, fs_direction);
-    }
-    
+    main_flag = scene.link_shader(env->get(0), env->get(1));
+
     while(main_flag==0){
         // get json data from socket
         buffer_pointer = socket.run();
         // the draw function will return non-zero upon exit
         main_flag = scene.draw(buffer_pointer);
     }
-    // do some proper clean-up
-    socket.cleanup();
     return 0;
 }

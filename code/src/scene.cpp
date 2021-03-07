@@ -24,7 +24,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 /* read the text from the basic.frag and basic.frag files, return the contents of
 the defined file as a char array (string) */
-std::string Scene::read_shader(char direction[])
+std::string Scene::read_shader(std::string direction)
 {
     /* use fstream to read data from file into array */
     std::ifstream in(direction);
@@ -34,7 +34,7 @@ std::string Scene::read_shader(char direction[])
     return shader_text;
 }
 
-void Scene::init_glfw(void)
+Scene::Scene(void)
 {
     glfwSetErrorCallback(error_callback);
  
@@ -44,7 +44,7 @@ void Scene::init_glfw(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
  
-    window = glfwCreateWindow(640, 360, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(640, 360, "MachyTech", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -150,12 +150,11 @@ int Scene::draw(char *socket_data)
     glfwSwapBuffers(window);
     glfwPollEvents();
     if (glfwWindowShouldClose(window)){
-        glfw_cleanup();
         return 0;
     }
 }
 
-void Scene::glfw_cleanup(void){
+Scene::~Scene(void){
     glfwDestroyWindow(window);
 
     glfwTerminate();
@@ -175,7 +174,7 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 
 /* link shader with VBO >> DEPRECIATED!*/
-int Scene::link_shader(char vs_direction[], char fs_direction[])
+int Scene::link_shader(std::string vs_direction, std::string fs_direction)
 {
     vertex_shader_text = read_shader(vs_direction);
     vs_text = vertex_shader_text.c_str();

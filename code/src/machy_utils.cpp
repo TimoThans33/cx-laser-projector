@@ -1,15 +1,40 @@
+#include "machy_utils.h"
 
+void Environment::appendVariable(Variables *variable){
+    variables->push_back ( variable );
+}
 
-/* read the text from the basic.frag and basic.frag files, return the contents of
-the defined file as a char array (string) */
-/*
-std::string read_shader(char direction[])
+void Environment::print()
 {
-    // use fstream to read data from file into array
-    std::ifstream in(direction);
-    std::string contents((std::istreambuf_iterator<char>(in)),
-        std::istreambuf_iterator<char>());
-    std::string shader_text = contents.c_str();
-    return shader_text;
+    std::vector<Variables*>::iterator it;
+    
+    for (it = variables->begin (); it < variables->end (); it++)
+    {
+        std::string str = (*it)->get_var();
+        std::cout<<str<<std::endl;
+    }
+}
+
+std::string Environment::get(int varNum)
+{
+    std::vector<Variables*>::iterator it = variables->begin () + varNum;
+    return (*it)->get_var();
+}
+
+/*
+void Filemanagement::read_csv()
+{
+    std::ifstream file("trajectory_1_fpg_out.txt");
+    
+    if(!file.isopen()) throw std::runtime_error("could not open file")
+    std::string value;
+
+    std::cout<<"reading csv file...\n";
+    while (file.good())
+    {
+        getline ( file, value, ',' );
+        std::cout<< std::string( value, 1, value.length()-2 );
+    }
+
 }
 */
