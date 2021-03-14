@@ -44,7 +44,7 @@ class Scene
         std::string read_shader(std::string direction);
         int get_compile_data(GLuint shader);
         int link_shader(std::string vs_direction, std::string fs_direction);
-        int draw(char *socket_data);
+        int draw(char *sokect_data);
         ~Scene(void);
 };
 #endif

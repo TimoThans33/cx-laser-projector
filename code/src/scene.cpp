@@ -143,7 +143,7 @@ int Scene::draw(char *socket_data)
     glLineWidth( 5.0 );
     glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
 
-    glDrawArrays(GL_LINE_STRIP, 0, data_points);
+    glDrawArrays(GL_LINES, 0, data_points);
 
     data.clear();
     

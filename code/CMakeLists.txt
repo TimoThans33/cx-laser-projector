@@ -26,10 +26,11 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 add_subdirectory(vendor/glfw)
 
 # include shaders
-file(COPY shaders DESTINATION .)
+file(COPY shader DESTINATION .)
 
 # header files
 include_directories(include)
+include_directories(vendor/glm)
 
 # sources
 file(GLOB SOURCES "src/*.cpp")
