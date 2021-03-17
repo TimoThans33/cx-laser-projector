@@ -7,44 +7,68 @@
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 
-#include "linmath.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <vector>
-#include <json-c/json.h>
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <fstream>
 
-class Scene
+class Scene{
+    protected:
+        GLuint vertex_array_object, buffer, program;
+        int n_points;
+        std::vector<std::pair <std::string, std::vector<double>>> val;
+        struct Position{
+            float x, y;
+        };
+        std::vector <Position> position;
+    public:
+        Scene(GLuint a, std::vector<std::pair <std::string, std::vector<double>>> b)
+        {
+            program = a;
+            val = b;
+            program = a;
+            n_points = val.at(0).second.size();
+            printf("%d\n", n_points);
+        }
+        virtual void bind_buffer();
+        virtual void print_data();
+        virtual void render(GLFWwindow* win);
+        virtual ~Scene(){};
+};
+
+class RobotPath : public Scene
 {
     private:
-        GLFWwindow* window;
-        GLuint vbo, vertex_buffer, vertex_shader, fragment_shader;
-        GLint mvp_location, vpos_location, vcol_location;
-        
-        std::string vertex_shader_text;
-        std::string fragment_shader_text;
-
-        const char* fs_text;
-        const char* vs_text;
-        int vertex_flag, fragment_flag;
-        // json declerations
-        struct json_object *parsed_json;
-        struct json_object *x;
-        struct json_object *y;
-        struct json_object *v;
-        struct json_object *x_id;
-        struct json_object *y_id;
-        struct json_object *v_id;
+        GLuint rot_location, vpos_location, off_location;
+        int n_points;
     public:
-        GLuint program;
-        Scene(void);
-        std::string read_shader(std::string direction);
-        int get_compile_data(GLuint shader);
-        int link_shader(std::string vs_direction, std::string fs_direction);
-        int draw(char *sokect_data);
-        ~Scene(void);
+        RobotPath (GLuint a, std::vector<std::pair <std::string, std::vector<double>>> b) : Scene(a, b)
+        {
+            glCreateVertexArrays(1, &vertex_array_object);
+            glBindVertexArray(vertex_array_object);
+
+            glGenBuffers(1, &buffer);
+            glBindBuffer(GL_ARRAY_BUFFER, buffer);
+            bind_buffer();
+            
+            rot_location = glGetUniformLocation(program, "ROT");
+            vpos_location = glGetUniformLocation(program, "OFF");
+            off_location = glGetAttribLocation(program, "position");
+        }
+        void bind_buffer();
+        void render(GLFWwindow* win);
+        void print_data();
+        ~RobotPath()
+        {
+            glDeleteVertexArrays(1, &vertex_array_object);
+            glDeleteProgram(program);
+            glDeleteVertexArrays(1, &vertex_array_object);
+        }
 };
 #endif

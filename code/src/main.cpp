@@ -24,23 +24,14 @@ int main()
     env->print();
 
     PVFilemanagement filemanagement;
-    filemanagement.read_csv();
-    std::vector<double> x_out = filemanagement.returnxout();
-    for (auto& it : x_out){std::cout<< it <<" ";}
-    /* opening the socket */
-    socket_programming socket(env->get(2), env->get(3));
-    socket.wait_for_connection();
-    /* start openGL context */
-    Scene scene;
-    /* link to the shaders */
-    int main_flag = 1;
-    main_flag = scene.link_shader(env->get(0), env->get(1));
-
-    while(main_flag==0){
-        // get json data from socket
-        buffer_pointer = socket.run();
-        // the draw function will return non-zero upon exit
-        main_flag = scene.draw(buffer_pointer);
+    MachyGLutils utils;
+    /* creating openGL context */
+    Window win;
+    /* call shader linker */
+    GLuint program = utils.link_shader(env->get(0), env->get(1));
+    RobotPath scene(program, filemanagement.read_csv());
+    while(1){
+        scene.render(win.window);
     }
     return 0;
 }

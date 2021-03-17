@@ -21,11 +21,85 @@ std::string Environment::get(int varNum)
     return (*it)->get_var();
 }
 
-
-void PVFilemanagement::read_csv()
+std::string MachyGLutils::read_shader(std::string direction)
 {
+    std::ifstream in(direction);
+    std::string contents((std::istreambuf_iterator<char>(in)),
+        std::istreambuf_iterator<char>());
+    std::string shader_text = contents.c_str();
+    return shader_text;
+}
+
+GLuint MachyGLutils::link_shader(std::string vs_direction, std::string fs_direction)
+{
+    vertex_shader_text = read_shader(vs_direction);
+    vs_text = vertex_shader_text.c_str();
+    std::cout<<"using vertex shader : \n"<<vs_text<<std::endl;
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader, 1, &vs_text, NULL);
+    glCompileShader(vertex_shader);
+    vertex_flag = get_compile_data(vertex_shader);
+    if (vertex_flag==1){
+        std::cout<<"Error when compiling"<<std::endl;
+        throw;
+    }
+    std::cout<<"using vertex shader : \n"<<vs_text<<std::endl;
+
+    fragment_shader_text = read_shader(fs_direction);
+    fs_text = fragment_shader_text.c_str();
+
+    std::cout<<"using the fragment shader : \n"<<fs_text<<std::endl;
+
+    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader, 1, &fs_text, NULL);
+    glCompileShader(fragment_shader);
+
+    fragment_flag = get_compile_data(fragment_shader);
+    if (fragment_flag==1){
+        std::cout<<"Error when compile the fragment shader"<<std::endl;
+        throw;
+    }
+
+    std::cout<<"using the fragment shader : \n"<<fs_text<<std::endl;
+
+    GLuint program = glCreateProgram();
+    glAttachShader(program, vertex_shader);
+    glAttachShader(program, fragment_shader);
+    glLinkProgram(program);
+
+    return program;
+}
+
+int MachyGLutils::get_compile_data(GLuint shader)
+{
+    GLint isCompiled = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+    if(isCompiled == GL_FALSE)
+    {
+        /* ERROR handling */
+        GLint maxLength = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+        
+        std::vector<GLchar> errorLog(maxLength);
+        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+        /* make sure we don't leak the shader */
+        glDeleteShader(shader);
+        for(int i=0; i<maxLength; i++){
+            std::cout<<errorLog[i];
+        }
+        /* return 1 on error */
+        return 1;
+    }
+    /* return 0 when succesfull */
+    return 0;
+}
+
+std::vector<std::pair <std::string, std::vector<double>>> PVFilemanagement::read_csv()
+{
+    std::vector<std::pair <std::string, std::vector<double>>> val;
     std::ifstream file("trajectory_1_fpg_out.txt");
-    
+    clock_t begin_t = clock();
+
     if(!file.is_open()) throw std::runtime_error("could not open file");
 
     if(file.good())
@@ -57,57 +131,10 @@ void PVFilemanagement::read_csv()
             }
             rid++;
         }
+        clock_t end_t = clock();
+        printf("read file in: %lf", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
     }
-}
-
-std::vector<double> PVFilemanagement::returnxout()
-{
-    std::vector<double> returnvector;
-    for (int i=0; i<val.at(0).second.size(); ++i)
-    {
-        returnvector.push_back(val.at(0).second.at(i));
-    }
-    return returnvector;
-}
-
-std::vector<double> PVFilemanagement::returnyout()
-{
-    std::vector<double> returnvector;
-    for (int i=0; i<val.at(0).second.size(); ++i)
-    {
-        returnvector.push_back(val.at(1).second.at(i));
-    }
-    return returnvector;
-}
-
-std::vector<double> PVFilemanagement::returnvelocity()
-{
-    std::vector<double> returnvector;
-    for (int i=0; i<val.at(0).second.size(); ++i)
-    {
-        returnvector.push_back(val.at(3).second.at(i));
-    }
-    return returnvector;
-}
-
-std::vector<double> PVFilemanagement::returntime()
-{
-    std::vector<double> returnvector;
-    for (int i=0; i<val.at(0).second.size(); ++i)
-    {
-        returnvector.push_back(val.at(2).second.at(i));
-    }
-    return returnvector;
-}
-
-std::vector<double> PVFilemanagement::returntheta()
-{
-    std::vector<double> returnvector;
-    for (int i=0; i<val.at(0).second.size(); ++i)
-    {
-        returnvector.push_back(val.at(6).second.at(i));
-    }
-    return returnvector;
+    return val;
 }
 
 void PVFilemanagement::print_csv()
@@ -130,22 +157,4 @@ void PVFilemanagement::print_csv()
         }
         std::cout<<"\n";
     }
-}
-
-std::vector<std::vector<double>> PVMath::create_rotmat(PVFilemanagement pv, int time)
-{
-    std::vector<double> theta = pv.returntheta();
-    std::vector<std::vector<double>> returnmatrix {
-                                        {cos(theta[time]), sin(theta[time])},
-                                        {-sin(theta[time]), cos(theta[time])}
-                                     };
-    return returnmatrix;
-}
-
-void rotate_kernel(PVFilemanagement pv, std::vector<std::vector<double>> rotmatrix, int height, int width)
-{
-    std::vector<std::vector<int>> kernel {{0, width}, {height, width}, 
-                            {height, -width}, {0, -width}, {0, width}};
-    
-
 }
