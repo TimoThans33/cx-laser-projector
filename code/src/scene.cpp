@@ -13,6 +13,7 @@ void RobotPath::bind_buffer()
     glBufferSubData(GL_ARRAY_BUFFER, 0, position.size()*sizeof(position), &position[0]);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(position[0]), NULL);
     glEnableVertexAttribArray(vpos_location);
+    std::cout<<position[0].x<<", "<<position[0].y<<std::endl;
 }
 
 void RobotPath::render(GLFWwindow* win)

@@ -132,7 +132,7 @@ std::vector<std::pair <std::string, std::vector<double>>> PVFilemanagement::read
             rid++;
         }
         clock_t end_t = clock();
-        printf("read file in: %lf", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
+        printf("read file in: %lf\n", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
     }
     return val;
 }

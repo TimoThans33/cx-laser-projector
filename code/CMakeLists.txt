@@ -28,6 +28,9 @@ add_subdirectory(vendor/glfw)
 # include shaders
 file(COPY shader DESTINATION .)
 
+# test csv file
+file (COPY src/trajectory_1_fpg_out.txt DESTINATION .)
+
 # header files
 include_directories(include)
 include_directories(vendor/glm)

@@ -20,8 +20,7 @@
 
 class Scene{
     protected:
-        GLuint vertex_array_object, buffer, program;
-        int n_points;
+        GLuint program, n_points;
         std::vector<std::pair <std::string, std::vector<double>>> val;
         struct Position{
             float x, y;
@@ -32,34 +31,32 @@ class Scene{
         {
             program = a;
             val = b;
-            program = a;
             n_points = val.at(0).second.size();
-            printf("%d\n", n_points);
+            printf("total points: %d\n", n_points);
         }
-        virtual void bind_buffer();
-        virtual void print_data();
-        virtual void render(GLFWwindow* win);
-        virtual ~Scene(){};
+        virtual void bind_buffer() {};
+        virtual void print_data() {};
+        virtual void render(GLFWwindow* win) {};
+        virtual ~Scene() {};
 };
 
 class RobotPath : public Scene
 {
     private:
-        GLuint rot_location, vpos_location, off_location;
-        int n_points;
+        GLuint vertex_array_object, buffer, rot_location, vpos_location, off_location;
     public:
         RobotPath (GLuint a, std::vector<std::pair <std::string, std::vector<double>>> b) : Scene(a, b)
         {
             glCreateVertexArrays(1, &vertex_array_object);
             glBindVertexArray(vertex_array_object);
 
-            glGenBuffers(1, &buffer);
-            glBindBuffer(GL_ARRAY_BUFFER, buffer);
-            bind_buffer();
-            
             rot_location = glGetUniformLocation(program, "ROT");
             vpos_location = glGetUniformLocation(program, "OFF");
             off_location = glGetAttribLocation(program, "position");
+
+            glGenBuffers(1, &buffer);
+            glBindBuffer(GL_ARRAY_BUFFER, buffer);
+            bind_buffer();
         }
         void bind_buffer();
         void render(GLFWwindow* win);

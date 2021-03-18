@@ -1,6 +1,6 @@
-#version 120
-varying vec4 color;
+#version 450 core
+out vec4 color;
 void main()
 {
-    gl_FragColor = color;
+    color = vec4(0.0, 0.8, 1.0, 1.0);
 }
