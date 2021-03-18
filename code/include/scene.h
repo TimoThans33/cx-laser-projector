@@ -51,8 +51,8 @@ class RobotPath : public Scene
             glBindVertexArray(vertex_array_object);
 
             rot_location = glGetUniformLocation(program, "ROT");
-            vpos_location = glGetUniformLocation(program, "OFF");
-            off_location = glGetAttribLocation(program, "position");
+            off_location = glGetUniformLocation(program, "OFF");
+            vpos_location = glGetAttribLocation(program, "position");
 
             glGenBuffers(1, &buffer);
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
