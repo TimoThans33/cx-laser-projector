@@ -14,6 +14,9 @@ cmake ../ && make -j4
 ``` 
 
 ## new features
+* filemanagement
+
+Reading a csv file and store in the correct format for openGL.
 
 * path scene
 
