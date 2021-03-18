@@ -1,6 +1,12 @@
 #ifndef _MACHY_UTILS_H_
 #define _MACHY_UTILS_H_
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <glad/glad.h>
+#include "GLFW/glfw3.h"
+
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -31,6 +37,58 @@ class Environment
         void print();
 };
 
+class MachyGLutils
+{
+    private:
+        std::string vertex_shader_text;
+        std::string fragment_shader_text;
+        
+        int vertex_flag, fragment_flag;
+
+        const char* fs_text;
+        const char* vs_text;
+
+        std::vector<std::string> info;
+    public:
+        GLuint vertex_shader, fragment_shader;
+        std::string read_shader(std::string direction);
+        int get_compile_data(GLuint shader);
+        GLuint link_shader(std::string vs_direction, std::string fs_direction);
+};
+
+class Window
+{
+    public:
+        GLFWwindow* window;
+        Window(void)
+        {
+            if (!glfwInit())
+                exit(EXIT_FAILURE);
+
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+            window = glfwCreateWindow(640, 360, "MachyTech", NULL, NULL);
+            if (!window)
+            {
+                glfwTerminate();
+                exit(EXIT_FAILURE);
+            }
+
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+            glfwMakeContextCurrent(window);
+            gladLoadGL();
+            glfwSwapInterval(1);
+        }
+        ~Window(void)
+        {
+            glfwDestroyWindow(window);
+            glfwTerminate();
+            exit(EXIT_SUCCESS);
+        }
+
+};
 
 class PVFilemanagement
 {
@@ -38,28 +96,8 @@ class PVFilemanagement
     std::vector<std::pair <std::string, std::vector<double>>> val;
 
     public:
-        void read_csv(void);
+        std::vector<std::pair <std::string, std::vector<double>>> read_csv(void);
         void print_csv(void);
-        std::vector<double> returnxout(void);
-        std::vector<double> returnyout(void);
-        std::vector<double> returntime(void);
-        std::vector<double> returnvelocity(void);
-        std::vector<double> returntheta(void);
-};
-
-class PVMath
-{
-    public:
-        std::vector<double> x_trans, y_trans, v;
-    public:
-        std::vector<std::vector<double>> create_rotmat(PVFilemanagement pv, int time);
-        void rotate_kernel(PVFilemanagement pv, int height, int width);
-        void line_intersect(PVFilemanagement pv);
-        void rotate_coord(int time, int n_steps, PVFilemanagement pv);
-        void transform_xyv();
-    private:
-        int t, n;
-        std::vector<double> rot_mat;
 };
 
 #endif /* _MACHY_UTILS_H_ */

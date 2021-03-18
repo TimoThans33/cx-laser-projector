@@ -1,241 +1,67 @@
 #include "scene.h"
 
-/* VBO data structure */
-struct Data
+void RobotPath::bind_buffer()
 {
-    /* data */
-    GLfloat x, y;
-    GLfloat r, g, b;
-};
-
-std::vector <Data> data;
-
-struct Velocity
-{
-    GLfloat v;
-};
-
-// #define DEBUG
-
-/* Function Prototypes */
-static void error_callback(int error, const char* description);
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-/* End of Function Prototypes */
-
-/* read the text from the basic.frag and basic.frag files, return the contents of
-the defined file as a char array (string) */
-std::string Scene::read_shader(std::string direction)
-{
-    /* use fstream to read data from file into array */
-    std::ifstream in(direction);
-    std::string contents((std::istreambuf_iterator<char>(in)),
-        std::istreambuf_iterator<char>());
-    std::string shader_text = contents.c_str();
-    return shader_text;
-}
-
-Scene::Scene(void)
-{
-    glfwSetErrorCallback(error_callback);
- 
-    if (!glfwInit())
-        exit(EXIT_FAILURE);
- 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
- 
-    window = glfwCreateWindow(640, 360, "MachyTech", NULL, NULL);
-    if (!window)
+    clock_t begin_t = clock();
+    for(int i=0; i<val.at(0).second.size(); i++)
     {
-        glfwTerminate();
-        exit(EXIT_FAILURE);
+        position.push_back({(float)val.at(0).second.at(i), (float)val.at(1).second.at(i)});
     }
- 
-    glfwSetKeyCallback(window, key_callback);
-    
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
-    glfwMakeContextCurrent(window);
-    gladLoadGL();
-    glfwSwapInterval(1);
+    clock_t end_t = clock();
+    printf("formatted data in : %lf\n", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
+    glBufferData(GL_ARRAY_BUFFER, position.size()*sizeof(position), NULL, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, position.size()*sizeof(position), &position[0]);
+    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(position[0]), NULL);
+    glEnableVertexAttribArray(vpos_location);
+    std::cout<<position[0].x<<", "<<position[0].y<<std::endl;
 }
 
-/* render the data recieved from the socket */
-int Scene::draw(char *socket_data)
+void RobotPath::render(GLFWwindow* win)
 {
-    float ratio;
-    int width, height;
-    mat4x4 m, p, mvp;
-
-    glfwGetFramebufferSize(window, &width, &height);
-    ratio = width / (float) height;
-
-    glViewport(0, 0, width, height);
-
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    mat4x4_identity(m);
-    /* This will rotate the projection */
-    // mat4x4_rotate_Y(m, m, 0.0);// mat4x4_rotate_Z(m, m, (float) glfwGetTime());
-    mat4x4_ortho(p, 0.f, 0.7, -.3f, .3f, 1.f, -1.f);
-    // mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-    // mat4x4_scale(m, m, 6 );
-    mat4x4_mul(mvp, p, m);
-    
-    glUseProgram(program);
-    /* Draw using the vertices in our vertex buffer object */
-    /* create the vertex array object */
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    /* The MVP matrix */
-    mvp_location = glGetUniformLocation(program, "MVP");
-    vcol_location = glGetAttribLocation(program, "velocity_color");
-    /* Fill the array with json values */
-    size_t data_points;
-    
-    parsed_json = json_tokener_parse(socket_data);
-    if(socket_data == nullptr) return 0;
-    json_object_object_get_ex(parsed_json, "x", &x);
-    if(x == nullptr) return 0;
-    json_object_object_get_ex(parsed_json, "y", &y);
-    if(y == nullptr) return 0;
-    json_object_object_get_ex(parsed_json, "v", &v);
-    if(v == nullptr) return 0;
-
-    data_points = json_object_array_length(x);
-    std::cout<<"Number of data points : "<<data_points<<std::endl;
-
-    // struct Data vertices[data_points];
-
-    for(int i=0;i<data_points;i++){
-        x_id = json_object_array_get_idx(x, i);
-        y_id = json_object_array_get_idx(y, i);
-        v_id = json_object_array_get_idx(v, i);
-
-        std::string x_coord = json_object_get_string(x_id);
-        std::string y_coord = json_object_get_string(y_id);
-        std::string v_coord = json_object_get_string(v_id);
-        std::string::size_type sz;
-
-        data.push_back({std::stof (x_coord, &sz), std::stof (y_coord, &sz),
-                        std::stof (v_coord,&sz), 1-std::stof (v_coord, &sz), 0.0});
-
-#ifdef DEBUG
-        std::cout<<"x = "<<data[i].x<<std::endl;
-        std::cout<<"y = "<<data[i].y<<std::endl;
-        std::cout<<"r = "<<data[i].r<<std::endl;
-        std::cout<<"g = "<<data[i].g<<std::endl;
-        std::cout<<"b = "<<data[i].b<<std::endl;
-#endif
-    }
-    std::cout<<"------------------"<<std::endl;
-    /* copy the array to the buffer object */
-    glBufferData(GL_ARRAY_BUFFER, data.size()*sizeof(data), &data[0], GL_STREAM_DRAW);
-
-    glEnableVertexAttribArray(vertex_buffer);
-    glVertexAttribPointer(vertex_buffer, 2, GL_FLOAT, GL_FALSE, sizeof(data[0]), 0);
-
-    glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(data[0]), (void*) (sizeof(float) * 2));
-
-    /* changing the linewidth like this is depreceated in modern openGL... it is better to construct a geometry shader */
-    glLineWidth( 5.0 );
-    glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) mvp);
-
-    glDrawArrays(GL_LINES, 0, data_points);
-
-    data.clear();
-    
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-    if (glfwWindowShouldClose(window)){
-        return 0;
-    }
-}
-
-Scene::~Scene(void){
-    glfwDestroyWindow(window);
-
-    glfwTerminate();
-    exit(EXIT_SUCCESS);
-}
-
-/* Setting an error callback for glfw */
-static void error_callback(int error, const char* description)
-{
-    fprintf(stderr, "Error: %s\n", description);
-}
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-}
-
-
-/* link shader with VBO >> DEPRECIATED!*/
-int Scene::link_shader(std::string vs_direction, std::string fs_direction)
-{
-    vertex_shader_text = read_shader(vs_direction);
-    vs_text = vertex_shader_text.c_str();
-    std::cout<<"using vertex shader : \n"<<vs_text<<std::endl;
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vs_text, NULL);
-    glCompileShader(vertex_shader);
-    vertex_flag = get_compile_data(vertex_shader);
-    if (vertex_flag==1){
-        std::cout<<"Error when compiling"<<std::endl;
-        throw;
-    }
-
-    std::cout<<"using vertex shader : \n"<<vs_text<<std::endl;
-
-    fragment_shader_text = read_shader(fs_direction);
-    fs_text = fragment_shader_text.c_str();
-
-    std::cout<<"using the fragment shader : \n"<<fs_text<<std::endl;
-
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fs_text, NULL);
-    glCompileShader(fragment_shader);
-
-    fragment_flag = get_compile_data(fragment_shader);
-    if (fragment_flag==1){
-        std::cout<<"Error when compile the fragment shader"<<std::endl;
-        throw;
-    }
-
-    std::cout<<"using the fragment shader : \n"<<fs_text<<std::endl;
-
-    program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-
-    return 0;
-}
-
-/* check for compile errors from the glsl compiler, pass 0 upon completion and 1 when error occured */
-int Scene::get_compile_data(GLuint shader)
-{
-    GLint isCompiled = 0;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
-    if(isCompiled == GL_FALSE)
+    for (int i=0; i<val.at(0).second.size(); i++)
     {
-        /* ERROR handling */
-        GLint maxLength = 0;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+        double t_begin = val.at(2).second.at(i);
+        clock_t ct_begin = clock();
+
+        const GLfloat color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        glClearBufferfv(GL_COLOR, 0, color);
+
+        int width, height;
+        glfwGetFramebufferSize(win, &width, &height);
+        glViewport(0, 0, width, height);
+        glUseProgram(program);
+
         
-        std::vector<GLchar> errorLog(maxLength);
-        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
-        /* make sure we don't leak the shader */
-        glDeleteShader(shader);
-        for(int i=0; i<maxLength; i++){
-            std::cout<<errorLog[i];
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, -(float)val.at(6).second.at(i),
+                    glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+        glm::vec2 offset = glm::vec2((float)val.at(0).second.at(i), 
+                                        (float)val.at(1).second.at(i));
+        glUniform2fv(off_location, 1, glm::value_ptr(offset));
+        glUniformMatrix4fv(rot_location, 1, GL_FALSE, glm::value_ptr(trans));
+        glDrawArrays(GL_LINE_STRIP, 0 , n_points);
+
+        double t_end = val.at(2).second.at(i+1);
+        clock_t ct_end = clock();
+        double cdt = double(ct_end-ct_begin)/double(CLOCKS_PER_SEC);
+        double dt = double(t_end - t_begin);
+
+        printf("fps: %lf\n", 1/cdt);
+        printf("idle: %lf\n", double(dt-cdt));
+        if(double(dt-cdt)>0){usleep(double(dt-cdt) * 1000000);}
+
+        glfwSwapBuffers(win);
+        glfwPollEvents();
+        if (glfwWindowShouldClose(win)){
+            exit(1);
         }
-        /* return 1 on error */
-        return 1;
     }
-    /* return 0 when succesfull */
-    return 0;
+}
+
+void RobotPath::print_data()
+{
+    for (const auto &arr: position){
+        std::cout<< arr.x<< ", " << arr.y <<std::endl;
+    }
 }
