@@ -93,6 +93,77 @@ int MachyGLutils::get_compile_data(GLuint shader)
     /* return 0 when succesfull */
     return 0;
 }
+void MachyGLutils::read_remote_csv(std::string weburl, struct Positions *positions)
+{
+    CURL *curl_handle;
+    CURLcode res;
+
+    struct CurlMemoryStruct chunk;
+    chunk.memory = malloc(1);
+    chunk.size = 0;
+
+    curl_global_init(CURL_GLOBAL_ALL);
+
+    curl_handle = curl_easy_init();
+    if(curl_handle)
+    {
+        curl_easy_setopt(curl_handle, CURLOPT_URL, weburl);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+        curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+        res = curl_easy_perform(curl_handle);
+        if(res != CURLE_OK){
+            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        }
+        else{
+            std::cout<<(unsigned long)chunk.size)<<"%lu bytes retrieved\n";
+            clock_t begin_t = clock();
+
+            std::string line, str;
+            float value;
+            float * data;
+            while(std::getline(chunk.memory, line))
+            {
+                std::stringstream ss(line);
+                int cid = 0;
+                while(ss >> value)
+                {
+                    data[cid] = value;
+                    if(ss.peek() == ',') ss.ignore();
+                    cid++;
+                    data = new int;
+                }
+                position.push_back({data[0], data[1]});
+            }
+            clock_t end_t = clock();
+            printf("read file in: %lf\n", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
+        }
+    }
+}
+
+void MachyGLutils::read_csv(std::string filedir)
+{
+    std::ifstream file(filedir);
+}
+
+static size_t MachyGLutils::WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    size_t realsize = size * nmemb;
+    struct CurlMemoryStruct *mem = (struct CurlMemoryStruct *)userp;
+    
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if(ptr == NULL)
+    {
+        printf("not enough memory (realloc returned NULL)\n");
+        return 0;
+    }
+
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+
+    return realsize;
+}
 
 std::vector<std::pair <std::string, std::vector<double>>> PVFilemanagement::read_csv()
 {
