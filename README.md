@@ -13,6 +13,12 @@ cmake ../ && make -j4
 ./app
 ``` 
 
+## git submodules
+
+```
+git pull --recurse-submodules
+```
+
 ## new features
 * filemanagement
 
