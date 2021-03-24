@@ -143,6 +143,14 @@ void MachyGLutils::read_remote_csv(std::string weburl, struct Positions *positio
 void MachyGLutils::read_csv(std::string filedir)
 {
     std::ifstream file(filedir);
+    clock_t begin_t = clock();
+
+    if(!file.is_open()) throw std::runtime_error("could not open file");
+
+    if(file.good())
+    {
+        
+    }
 }
 
 static size_t MachyGLutils::WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
