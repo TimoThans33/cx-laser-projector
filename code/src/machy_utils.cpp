@@ -139,12 +139,12 @@ void MachyGLutils::read_remote_csv(std::string weburl, struct Positions *positio
         }
     }
 }
-
+/*
 void MachyGLutils::read_csv(std::string filedir)
 {
     std::ifstream file(filedir);
 }
-
+*/
 static size_t MachyGLutils::WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     size_t realsize = size * nmemb;
@@ -192,6 +192,8 @@ std::vector<std::pair <std::string, std::vector<double>>> PVFilemanagement::read
             }
             if (rid > 11){
                 int cid = 0;
+            if (rid > 11){
+                int cid = 0;
                 std::stringstream ss(line);
                 while(ss >> value)
                 {
@@ -201,11 +203,12 @@ std::vector<std::pair <std::string, std::vector<double>>> PVFilemanagement::read
                 }
             }
             rid++;
+            }
+            clock_t end_t = clock();
+            printf("read file in: %lf\n", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
         }
-        clock_t end_t = clock();
-        printf("read file in: %lf\n", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
+        return val;
     }
-    return val;
 }
 
 void PVFilemanagement::print_csv()

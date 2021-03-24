@@ -15,6 +15,7 @@
 #include <math.h>
 #include <glm/glm.hpp>
 #include "envs.h"
+#include <curl/curl.h>
 
 class Environment
 {
@@ -54,6 +55,7 @@ class MachyGLutils
         std::string read_shader(std::string direction);
         int get_compile_data(GLuint shader);
         GLuint link_shader(std::string vs_direction, std::string fs_direction);
+        void read_remote_csv(std::string weburl, struct Positions *position);
 };
 
 class Window
