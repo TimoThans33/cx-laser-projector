@@ -117,7 +117,7 @@ Opties trajectory doorgeven?
     -> naar udp(?)
 -> trajectory schrijven naar file en file serven
     -> MQTT message doorgeven dat robot gaat rijden...
-    
+
 ## Resources
 * Hands-on Network Programming with C: Learn Socket Programming in C
 

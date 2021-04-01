@@ -14,92 +14,88 @@
 #include <utility>
 #include <math.h>
 #include <glm/glm.hpp>
-#include "envs.h"
 #include <curl/curl.h>
 
-class Environment
-{
-    std::vector<Variables*> *variables;
-    public:
-        Environment(){
-            variables = new std::vector<Variables*>;
-        }
-        ~Environment(){
-            std::vector<Variables*>::iterator it;
+#include "scene.h"
+#include "envs.h"
 
-            for (it = variables->begin(); it < variables->end(); it++)
-            {
-                delete *it;
+namespace MachyCore
+{
+    class Environment
+    {
+        std::vector<Variables*> *variables;
+        public:
+            Environment(){
+                variables = new std::vector<Variables*>;
             }
-            delete variables;
-        };
-        void appendVariable(Variables*);
-        std::string get(int varNum);
-        void print();
-};
+            ~Environment(){
+                std::vector<Variables*>::iterator it;
 
-class MachyGLutils
-{
-    private:
-        std::string vertex_shader_text;
-        std::string fragment_shader_text;
-        
-        int vertex_flag, fragment_flag;
+                for (it = variables->begin(); it < variables->end(); it++)
+                {
+                    delete *it;
+                }
+                delete variables;
+            };
+            void appendVariable(Variables*);
+            std::string get(int varNum);
+            void print();
+    };
 
-        const char* fs_text;
-        const char* vs_text;
+    class MachyGLutils
+    {
+        private:
+            std::string vertex_shader_text;
+            std::string fragment_shader_text;
+            
+            int vertex_flag, fragment_flag;
 
-        std::vector<std::string> info;
-    public:
-        GLuint vertex_shader, fragment_shader;
-        std::string read_shader(std::string direction);
-        int get_compile_data(GLuint shader);
-        GLuint link_shader(std::string vs_direction, std::string fs_direction);
-        void read_remote_csv(std::string weburl, struct Positions *position);
-};
+            const char* fs_text;
+            const char* vs_text;
 
-class Window
-{
-    public:
-        GLFWwindow* window;
-        Window(void)
-        {
-            if (!glfwInit())
-                exit(EXIT_FAILURE);
+            std::vector<std::string> info;
+        public:
+            GLuint vertex_shader, fragment_shader;
+            std::string read_shader(std::string direction);
+            int get_compile_data(GLuint shader);
+            GLuint link_shader(std::string vs_direction, std::string fs_direction);
+    };
 
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-            window = glfwCreateWindow(640, 360, "MachyTech", NULL, NULL);
-            if (!window)
+    class Window
+    {
+        public:
+            GLFWwindow* window;
+            Window(void)
             {
+                if (!glfwInit())
+                    exit(EXIT_FAILURE);
+
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+                window = glfwCreateWindow(640, 360, "MachyTech", NULL, NULL);
+                if (!window)
+                {
+                    glfwTerminate();
+                    exit(EXIT_FAILURE);
+                }
+
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+                glfwMakeContextCurrent(window);
+                gladLoadGL();
+                glfwSwapInterval(1);
+            }
+            ~Window(void)
+            {
+                glfwDestroyWindow(window);
                 glfwTerminate();
-                exit(EXIT_FAILURE);
+                exit(EXIT_SUCCESS);
             }
 
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    };
+}
 
-            glfwMakeContextCurrent(window);
-            gladLoadGL();
-            glfwSwapInterval(1);
-        }
-        ~Window(void)
-        {
-            glfwDestroyWindow(window);
-            glfwTerminate();
-            exit(EXIT_SUCCESS);
-        }
 
-};
-
-class PVFilemanagement
-{
-    std::vector<std::string> info;
-    std::vector<std::pair <std::string, std::vector<double>>> val;
-
-    public:
-        std::vector<std::pair <std::string, std::vector<double>>> read_csv(void);
-        void print_csv(void);
-};
 
 #endif /* _MACHY_UTILS_H_ */
