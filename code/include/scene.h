@@ -18,54 +18,74 @@
 #include <unistd.h>
 #include <string.h>
 
-class Scene{
-    protected:
-        GLuint program, n_points;
-        std::vector<std::pair <std::string, std::vector<double>>> val;
-        struct Position{
-            float x, y;
-        };
-        std::vector <Position> position;
-    public:
-        Scene(GLuint a, std::vector<std::pair <std::string, std::vector<double>>> b)
-        {
-            program = a;
-            val = b;
-            n_points = val.at(0).second.size();
-            printf("total points: %d\n", n_points);
-        }
-        virtual void bind_buffer() {};
-        virtual void print_data() {};
-        virtual void render(GLFWwindow* win) {};
-        virtual ~Scene() {};
+#include "machy_utils.h"
+
+struct Data{
+    float x, y;
 };
 
-class RobotPath : public Scene
+struct Sim{
+    float x, y, t, v, theta;
+};
+
+void read_csv(std::string filedir, std::vector<Data> &position);
+void read_csv(std::string filedir, std::vector<Sim> &virposition);
+void read_remote_csv(char* weburl, std::vector<Data> &position);
+void read_remote_csv(char* weburl, std::vector<Sim> &virposition);
+void print_csv(std::vector<Data> &position);
+void print_csv(std::vector<Sim> &virposition);
+
+namespace MachyCore
 {
-    private:
-        GLuint vertex_array_object, buffer, rot_location, vpos_location, off_location;
-    public:
-        RobotPath (GLuint a, std::vector<std::pair <std::string, std::vector<double>>> b) : Scene(a, b)
-        {
-            glCreateVertexArrays(1, &vertex_array_object);
-            glBindVertexArray(vertex_array_object);
+    class Scene
+    {
+        protected:
+            GLuint program, n_points;
+            std::vector <Data> data;
+        public:
+            Scene(GLuint a)
+            {
+                program = a;
+            }
+            virtual void bind_buffer() {};
+            virtual void print_data() {};
+            virtual void render(GLFWwindow* win) {};
+            virtual ~Scene() {};
+    };
 
-            rot_location = glGetUniformLocation(program, "ROT");
-            off_location = glGetUniformLocation(program, "OFF");
-            vpos_location = glGetAttribLocation(program, "position");
+    class RobotPathSim : public Scene
+    {
+        private:
+            GLuint vertex_array_object, buffer, rot_location, vpos_location, off_location;
+            std::vector <Sim> simdata;
+        public:
+            RobotPathSim (GLuint a) : Scene(a)
+            {
+                glCreateVertexArrays(1, &vertex_array_object);
+                glBindVertexArray(vertex_array_object);
 
-            glGenBuffers(1, &buffer);
-            glBindBuffer(GL_ARRAY_BUFFER, buffer);
-            bind_buffer();
-        }
-        void bind_buffer();
-        void render(GLFWwindow* win);
-        void print_data();
-        ~RobotPath()
-        {
-            glDeleteVertexArrays(1, &vertex_array_object);
-            glDeleteProgram(program);
-            glDeleteVertexArrays(1, &vertex_array_object);
-        }
-};
+                rot_location = glGetUniformLocation(program, "ROT");
+                off_location = glGetUniformLocation(program, "OFF");
+                vpos_location = glGetAttribLocation(program, "position");
+
+                glGenBuffers(1, &buffer);
+                glBindBuffer(GL_ARRAY_BUFFER, buffer);
+                clock_t begin_t = clock();
+                read_remote_csv("http://0.0.0.0:8000/trajectory_100_fpg_out.txt", simdata);
+                clock_t end_t = clock();
+                printf("formatted data in : %lf\n\n", double(end_t-begin_t)/double(CLOCKS_PER_SEC));
+                n_points = simdata.size();
+                bind_buffer();
+            }
+            void bind_buffer();
+            void render(GLFWwindow* win);
+            void print_data();
+            ~RobotPathSim()
+            {
+                glDeleteVertexArrays(1, &vertex_array_object);
+                glDeleteProgram(program);
+                glDeleteVertexArrays(1, &vertex_array_object);
+            }
+    };
+}
 #endif
