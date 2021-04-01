@@ -2,95 +2,127 @@
 
 code used for the laser projector.
 
-## cx
-Customer experience code for the laser projector
-
-## embedded
-Embedded code for the laser projector. To be removed later.
-
-## Install
-
-install GLAD. GLAD is an online driver manager that will find the correct drivers for openGL that works on the graphics card on your system.
-
-```
-sudo apt-get install git cmake xorg-dev
-```
-```
-mkdir ~/bin && cd ~/bin
-```
-```
-git clone https://github.com/glfw/glfw.git
-```
-```
-mkdir ~/bin/glfw-3.3.2/build && cd ~/bin/glfw-3.3.2/build
-```
-```
-cmake ../ && make && sudo make install
-```
-Now copy the correct files to the correct directories.
-```
-sudo mkdir /usr/include/glad
-sudo cp glad.h /usr/include/glad
-```
-Now you need to copy the include folder from the glfw directory
-```
-sudo cp -r ~/bin/glfw-3.3.2/include/GLFW /usr/include/
-```
-For the customer experience code you need to install the following.
-```
-pip install pandas, numpy
-```
-For openGL you need the following.
-```
-sudo apt-get install libx11-dev, mesa-common-dev, libglu1-mesa-dev
-```
-Json C library
-```
-sudo apt-get install libjson-dev-c
-```
-Now you are ready to compile the program. For now this is a manually programmed makefile. This should later be a cmake program.
+## Getting started
 ```
 mkdir build && cd build
-cmake ../
-make
 ```
-When not connected to a robot you can start the simulation. You have to pass the correct ip-address and port. For example the localhost: 127.0.0.1. You can also use the ip address of the beaglebone 192.168.7.1 8080
 ```
-python3 main-sim.py 127.0.0.1 8080
+cmake ../ && make -j4
 ```
-You can start rendering and connect to the simulation by passing the same ip-address and port. This should get you started.
 ```
-./app 127.0.0.1 8080
-```
-## Install as Systemd service
-systemd is a linux service that connects all the processes of the operating system. You can install you own programs as systemd service as to run it all the time when the computer is on.
-In the app.service file change the user accordingly. Then copy the service file to your systemd processes.
-```
-sudo cp app.service /etc/systemd/system/
+./app
 ``` 
-There are some environment variable that you need to pass to the operating system.
+
+## git submodules
+
 ```
-sudo cp app.conf /etc/systemd/
-```
-Now copy the executable to your local binary folder.
-```
-sudo cp app /usr/bin/
-```
-Now you need to copy the GLSL shaders here as well. I personally like to keep them in my projects folder but easier is to install them in the same folder as your executable.
-```
-sudo cp -r shader /usr/bin/
+git pull --recurse-submodules
 ```
 
-Now restart the systemd services
+## new features
+* filemanagement
+
+Reading a csv file and store in the correct format for openGL.
+
+* path scene
+
+This feature includes code for the rendering of the csv file in openGL.
+
+## communication with AS robots
+
+RobotClient:
+
+Trajectory
 ```
-sudo systemctl stop app.service
-sudo systemctl daemon-reload
-sudo systemctl start app.service
+void RobotClient::executeTrajectory(const std::string& msg)
+{
+    node_.request(tjess::transport::Scope::HOST, pv::CmdLineArgs::getNamespace()+"_robot_manager", "executeTrajectory", msg );
+}
 ```
-Be careful with systemd processes sockets and executables. They are very prone to hackers. If you are absolutely sure you can enable the systemd service on boot.
+Deze trajectory kan dus opgevraagd worden met Tjess maar wordt hier gemaakt: robot manager execute trajectory -> motion_planning.cpp
 ```
-sudo systemctl enable app.service
+bool MotionPlanning::executeTrajectory(const MinimalTrajectory& new_trajectory)
+
+bool MotionPlanning::getFeasibleTrajectory(const MinimalTrajectory& trajectory_in, Trajectory& trajectory_out)
+
+GeneratorOutput out = path_generator_.generatePath(default_generator, gen_input);
+
+for(int i = 0; i<out.x.size(); i++)
+{
+    TrajectoryPoint tmp_point;
+    tmp_point.pose.push_back(out.x.at(i));
+    tmp_point.pose.push_back(out.y.at(i));
+    tmp_point.pose.push_back(out.theta.at(i));
+    tmp_point.velocity = out.vx.at(i);
+    tmp_point.acceleration = out.ax.at(i);
+    tmp_point.angular_rate = out.psi.at(i);
+    tmp_point.lateral_acceleration = out.vx.at(i)*out.psi.at(i);
+    tmp_point.curvature = out.psi.at(i)/std::max(out.vx.at(i),0.0000001f);
+    tmp_point.time = out.t.at(i) + feasible_path_start_time;       //  temorary solution, time shift will be sent from the rover 
+    trajectory_out.points.push_back(tmp_point);
+}
+
+FeasiblePathGenerator path_generator_;
+
+-> #include "primevision/mpl/generators/feasible_path_generator.h"
+
+GeneratorOutput FeasiblePathGenerator::generatePath(const std::string& generator, const GeneratorInput& input)
+
+struct GeneratorOutput
+{
+	std::vector<float>  x;
+	std::vector<float>  y;
+	std::vector<float>  theta;
+	std::vector<float>  vx;
+	std::vector<float>  psi;
+	std::vector<float>  ax;
+	std::vector<float>  t;
+    int start;
+    int finish;
+    bool valid{false};
+};
+
+if(publish_corridor_)
+{
+nlohmann::json cor_msg = nlohmann::json::object();
+cor_msg["id"] = pv::CmdLineArgs::getNamespace();
+cor_msg["corridor"] = nlohmann::json::array();
+for(auto p : safe_corridor)
+{
+    nlohmann::json line = { p.first, p.second};
+    cor_msg["corridor"].push_back(line);
+}
+
+triggerEvent_("CORRIDOR_VIZ", cor_msg.dump() );
+}
+
 ```
+Sensor data
+```
+node_.subscribe(tjess::transport::Scope::HOST, "/" + pv::CmdLineArgs::getNamespace()+"_robot_manager/status", [this](const std::string& req))
+
+nlohmann::json cmd = nlohmann::json::parse(req);
+if(cmd.count("odom")==1 && cmd["odom"].is_array())
+{
+    std::vector<float> odom = cmd["odom"].get<std::vector<float>>();
+    position_x = odom.at(0);
+    position_y = odom.at(1);
+    orientation_z = odom.at(2);
+    velocity_x_ = odom.at(3);
+    angular_rate_ = odom.at(4);
+}
+```
+
+tjess gebruiken of eigen functies toevoegen?
+
+mqtt voor sensor data?
+
+Opties trajectory doorgeven?
+-> trajectory doorsturen met JSON (gebeurt nu ook al)
+    -> naar socket (TCP)
+    -> naar udp(?)
+-> trajectory schrijven naar file en file serven
+    -> MQTT message doorgeven dat robot gaat rijden...
 
 ## Resources
 * Hands-on Network Programming with C: Learn Socket Programming in C

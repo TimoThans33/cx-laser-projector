@@ -5,14 +5,10 @@ We would like our program to take the hostname and port number of the server it 
 as command-line arguments. This makes the program flexible.
 */
 void socket_programming::init_socket(void){
-    if (argc < 3){
-        fprintf(stderr, "usage: tcp_client hostname port\n");
-        throw;
-    }
     std::cout << "Configuring remote address...\n" << std::endl;
     memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
-    if (getaddrinfo(argv[1], argv[2], &hints, &peer_address)){
+    if (getaddrinfo(ip_addr, port, &hints, &peer_address)){
         fprintf(stderr, "getaddrinfo() failed. (%d)\n", GETSOCKETERRNO());
         throw;
     } 
@@ -86,7 +82,6 @@ char * socket_programming::run(void){
     if (FD_ISSET(socket_peer, &reads)){
         bytes_received = recv(socket_peer, read, 8192, 0);
     if (bytes_received < 1) {
-        cleanup();
         std::cout << "Connection closed by peer.\n" << std::endl;
         throw;
     }
@@ -97,7 +92,7 @@ char * socket_programming::run(void){
 /*
 some clean up
 */
-void socket_programming::cleanup(void){
+socket_programming::~socket_programming(void){
     std::cout << "Closing socket...\n" << std::endl;
     CLOSESOCKET(socket_peer);
 

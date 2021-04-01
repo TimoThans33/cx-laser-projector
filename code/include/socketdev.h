@@ -25,19 +25,19 @@
 
 class socket_programming{
     public:
-        int argc;
+        const char* ip_addr;
+        const char* port;
         int bytes_received;
         char read[8192];
         struct addrinfo hints;
         struct addrinfo *peer_address;
         SOCKET socket_peer;
-        // dynamic array
-        char *argv[];
-        socket_programming(int x, char *y[]){
-            argc = x;
-            for (int i;i<x;i++){
-                argv[i] = y[i];
-            }
+        socket_programming(std::string x, std::string y){
+            ip_addr = x.c_str();
+            port = y.c_str();
+            init_socket();
+            print_addr();
+            create();
         }
         void init_socket(void);
         void print_addr(void);
@@ -45,7 +45,7 @@ class socket_programming{
         void make_connection(void);
         void wait_for_connection(void);
         char * run(void);
-        void cleanup(void);
+        ~socket_programming(void);
 };
 
 #endif
